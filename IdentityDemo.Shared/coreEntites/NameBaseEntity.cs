@@ -5,6 +5,7 @@ using System.Text;
 
 namespace IdentityDemo.Shared.coreEntites
 {
+#nullable enable
     public class NameBaseEntity: EntityBase
     {
         [Required]

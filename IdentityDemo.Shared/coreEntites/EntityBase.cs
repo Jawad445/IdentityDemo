@@ -4,6 +4,7 @@ using System.Text;
 
 namespace IdentityDemo.Shared.coreEntites
 {
+#nullable enable
     public class EntityBase<TId>
     {
         public TId Id { get; set; }
