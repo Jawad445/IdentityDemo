@@ -56,7 +56,7 @@ public class AuthController : ControllerBase
             var token = CreateToken(authClaims);
             var refreshToken = GenerateRefreshToken();
 
-            _ = int.TryParse(_configuration["JWT:RefreshTokenValidityInDays"], out int refreshTokenValidityInDays);
+            _ = int.TryParse(_configuration["AuthSettings:RefreshTokenValidityInDays"], out int refreshTokenValidityInDays);
 
             user.RefreshToken = refreshToken;
             user.RefreshTokenExpiryTime = DateTime.Now.AddDays(refreshTokenValidityInDays);
@@ -198,12 +198,12 @@ public class AuthController : ControllerBase
 
     private JwtSecurityToken CreateToken(List<Claim> authClaims)
     {
-        var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:Secret"]));
-        _ = int.TryParse(_configuration["JWT:TokenValidityInMinutes"], out int tokenValidityInMinutes);
+        var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["AuthSettings:Key"]));
+        _ = int.TryParse(_configuration["AuthSettings:TokenValidityInMinutes"], out int tokenValidityInMinutes);
 
         var token = new JwtSecurityToken(
-            issuer: _configuration["JWT:ValidIssuer"],
-            audience: _configuration["JWT:ValidAudience"],
+            issuer: _configuration["AuthSettings:Issuer"],
+            audience: _configuration["AuthSettings:Audiance"],
             expires: DateTime.Now.AddMinutes(tokenValidityInMinutes),
             claims: authClaims,
             signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
@@ -227,7 +227,7 @@ public class AuthController : ControllerBase
             ValidateAudience = false,
             ValidateIssuer = false,
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:Secret"])),
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["AuthSettings:Key"])),
             ValidateLifetime = false
         };
 
