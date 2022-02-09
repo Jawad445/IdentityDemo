@@ -1,21 +1,28 @@
 ﻿namespace IdentityDemo.API.Services;
 
-using IdentityDemo.API.Models;
 using IdentityDemo.API.Services.Interfaces;
 using IdentityDemo.Shared;
+using IdentityDemo.Shared.ViewModels;
 using Microsoft.AspNetCore.Identity;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 public class UserService : IUserService
 {
     private readonly UserManager<IdentityUser> _userManager;
     private readonly SignInManager<IdentityUser> _signinManager;
+    private readonly IConfiguration _configuration;
+    
     public UserService(UserManager<IdentityUser> userManager, 
-        SignInManager<IdentityUser> signinManager)
+        SignInManager<IdentityUser> signinManager,
+        IConfiguration configuration)
     {
        _userManager = userManager;
         _signinManager = signinManager;
+        _configuration = configuration;
     }
+    
     public async Task<Response> RegisterUserAsync(RegisterViewModel model)
     {
         if(model == null)
