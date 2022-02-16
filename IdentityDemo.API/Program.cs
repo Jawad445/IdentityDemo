@@ -1,10 +1,10 @@
 using IdentityDemo.API.Data;
+using IdentityDemo.API.Middleware;
 using IdentityDemo.API.Models;
-using IdentityDemo.API.Services;
-using IdentityDemo.API.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
@@ -30,6 +30,10 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 })
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
+
+AuthSettings auth_settings = new AuthSettings();
+builder.Configuration.GetSection("AuthSettings").Bind(auth_settings);
+
 //authentication service configuration
 builder.Services.AddAuthentication(auth =>
 {
@@ -49,7 +53,7 @@ builder.Services.AddAuthentication(auth =>
     };
 });
 
-//builder.Services.AddScoped<IUserService, UserService>();
+//builder.Services.AddTransient<IUserService, UserService>();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -68,7 +72,7 @@ app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();
-
+//app.Usetestmiddleware();
 app.MapControllers();
 
 app.Run();

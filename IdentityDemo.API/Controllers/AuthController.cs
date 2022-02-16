@@ -1,7 +1,6 @@
 ﻿namespace IdentityDemo.API.Controllers;
 
 using IdentityDemo.API.Models;
-using IdentityDemo.API.Services.Interfaces;
 using IdentityDemo.Shared;
 using IdentityDemo.Shared.Enum;
 using IdentityDemo.Shared.ViewModels;
@@ -21,16 +20,17 @@ public class AuthController : ControllerBase
 {
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly RoleManager<IdentityRole> _roleManager;
-    private readonly IConfiguration _configuration;
-    
+    private readonly AuthSettings _settings;
+
     public AuthController(
         UserManager<ApplicationUser> userManager,
             RoleManager<IdentityRole> roleManager,
-            IConfiguration configuration)
+            AuthSettings settings)
+
     {
         _userManager = userManager;
         _roleManager = roleManager;
-        _configuration = configuration;
+        _settings = settings;
     }
 
     [HttpPost]
@@ -56,10 +56,10 @@ public class AuthController : ControllerBase
             var token = CreateToken(authClaims);
             var refreshToken = GenerateRefreshToken();
 
-            _ = int.TryParse(_configuration["AuthSettings:RefreshTokenValidityInDays"], out int refreshTokenValidityInDays);
+            //_ = int.TryParse(_settings.RefreshTokenValidityInDays.ToString(), out int refreshTokenValidityInDays);
 
             user.RefreshToken = refreshToken;
-            user.RefreshTokenExpiryTime = DateTime.Now.AddDays(refreshTokenValidityInDays);
+            user.RefreshTokenExpiryTime = DateTime.Now.AddDays(_settings.RefreshTokenValidityInDays);
 
             await _userManager.UpdateAsync(user);
 
@@ -145,8 +145,10 @@ public class AuthController : ControllerBase
         {
             return BadRequest("Invalid access token or refresh token");
         }
-        
+
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
         string username = principal.Identity.Name;
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
         var user = await _userManager.FindByNameAsync(username);
 
         if (user == null || user.RefreshToken != refreshToken || user.RefreshTokenExpiryTime <= DateTime.Now)
@@ -198,16 +200,15 @@ public class AuthController : ControllerBase
 
     private JwtSecurityToken CreateToken(List<Claim> authClaims)
     {
-        var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["AuthSettings:Key"]));
-        _ = int.TryParse(_configuration["AuthSettings:TokenValidityInMinutes"], out int tokenValidityInMinutes);
-
+        var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_settings.Key));
+        
         var token = new JwtSecurityToken(
-            issuer: _configuration["AuthSettings:Issuer"],
-            audience: _configuration["AuthSettings:Audiance"],
-            expires: DateTime.Now.AddMinutes(tokenValidityInMinutes),
+            issuer: _settings.Issuer,
+            audience: _settings.Audiance,
+            expires: DateTime.Now.AddMinutes(_settings.TokenValidityInMinutes),
             claims: authClaims,
             signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
-            );
+        );
 
         return token;
     }
@@ -227,7 +228,7 @@ public class AuthController : ControllerBase
             ValidateAudience = false,
             ValidateIssuer = false,
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["AuthSettings:Key"])),
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_settings.Key)),
             ValidateLifetime = false
         };
 
